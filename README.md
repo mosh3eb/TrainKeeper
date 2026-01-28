@@ -8,8 +8,13 @@
 
 TrainKeeper is a minimal-decision, high-signal toolkit for building reproducible, debuggable, and efficient ML training systems. It adds guardrails **inside** training loops without replacing your existing stack.
 
+## Who it's for
+- ML engineers iterating on model training
+- Researchers validating reproducibility and failures
+- Teams shipping production-grade training pipelines
+
 ## What TrainKeeper solves
-- **Reproducibility**: deterministic seeds + environment capture + replay
+- **Reproducibility**: deterministic seeds, environment capture, replay
 - **Data integrity**: schema inference, drift detection, corruption alarms
 - **Training stability**: hooks for gradients/activations, failure snapshots
 - **Efficiency**: mixed precision, accumulation, checkpoint utilities
@@ -27,6 +32,10 @@ def train():
 if __name__ == "__main__":
     train()
 ```
+
+## Outputs per run
+- `experiment.yaml`, `run.json`
+- `seeds.json`, `system.json`, `env.txt`, `run.sh`
 
 ## Install
 ```bash
@@ -87,12 +96,15 @@ See `benchmarks/` for the baseline suite and real pipelines.
 ## Architecture diagram
 See `docs/architecture.md` for the system overview and component boundaries.
 
+## Contributing
+We welcome issues and PRs. Please:
+- open an issue with the problem or proposal
+- keep changes scoped and tested
+- run `pytest` and `tk system-check` before submitting
+
 ## Development
 ```bash
 pip install -e .[dev,torch]
 pytest
 mkdocs serve
 ```
-
-## License
-Apache-2.0
