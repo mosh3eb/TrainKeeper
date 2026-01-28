@@ -1,0 +1,11 @@
+ site_name: TrainKeeper
+ theme:
+   name: material
+ nav:
+   - Home: index.md
+   - Research Problem: research_problem.md
+  - Hypotheses: hypotheses.md
+   - Benchmark Plan: benchmark_plan.md
+   - Architecture: architecture.md
+  - Packaging: packaging.md
+  - Benchmarks: benchmarks.md
