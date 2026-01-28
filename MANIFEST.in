@@ -1,0 +1,18 @@
+include README.md
+include LICENSE
+include pyproject.toml
+recursive-include trainkeeper *.py
+recursive-include trainkeeper/trainkeeper/templates *
+prune scenarios
+prune system_tests
+prune benchmarks
+prune examples
+prune docs
+prune data
+prune scenario1_runs
+prune scenario2_results
+prune scenario3_results
+prune scenario_results
+prune build
+prune dist
+prune trainkeeper/trainkeeper.egg-info
