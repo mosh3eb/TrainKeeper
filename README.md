@@ -125,15 +125,15 @@ See `benchmarks/` for the baseline suite and real pipelines.
 ## Architecture diagram
 See `docs/architecture.md` for the system overview and component boundaries.
 
-## Contributing
-We welcome issues and PRs. Please:
-- open an issue with the problem or proposal
-- keep changes scoped and tested
-- run `pytest` and `tk system-check` before submitting
-
 ## Development
 ```bash
 pip install -e .[dev,torch]
 pytest
 mkdocs serve
 ```
+
+## Contributing
+We welcome issues and PRs. Please:
+- open an issue with the problem or proposal
+- keep changes scoped and tested
+- run `pytest` and `tk system-check` before submitting
