@@ -10,7 +10,7 @@
  - Debugging and interpretability hooks
  - Packaging and monitoring for deployment
 
-![TrainKeeper architecture diagram](assets/architecture-diagram.png)
+![TrainKeeper architecture for training-time guardrails](assets/architecture-diagram.png)
  
  ## Components
  

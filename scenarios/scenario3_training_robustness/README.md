@@ -3,6 +3,16 @@
 This scenario simulates training-time failures and verifies that TrainKeeper
 detects, reports, and snapshots training instability.
 
+## Goal
+Detect instability and halt unsafe training steps.
+
+## What is tested
+- exploding gradients
+- NaN loss
+- corrupted batch
+- optimizer divergence
+- representation collapse
+
 ## Run all cases
 
 ```bash
@@ -19,3 +29,7 @@ Outputs are written to `scenario3_results/` with:
 ```bash
 python3 scenarios/scenario3_training_robustness/pipeline/train.py --case nan_loss
 ```
+
+## Expected outputs
+- `scenario3_results/*/exp-*/health_report.json`
+- `scenario3_results/*/exp-*/failure_batch.json` (when triggered)

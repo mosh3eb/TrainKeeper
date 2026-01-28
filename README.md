@@ -42,6 +42,12 @@ if __name__ == "__main__":
     train()
 ```
 
+Minimal check:
+```bash
+pip install trainkeeper
+tk --help
+```
+
 ## Outputs per run
 - `experiment.yaml`, `run.json`
 - `seeds.json`, `system.json`, `env.txt`, `run.sh`
@@ -82,6 +88,13 @@ These are **not** included in the PyPI package.
 - `scenarios/scenario3_training_robustness/`
 - `system_tests/runner.py`
 
+## Scenarios summary
+| Scenario | Purpose | Key output | Outcome |
+|---|---|---|---|
+| reproducibility | deterministic runs | `run.json`, `metrics.json` | consistent hashing |
+| data integrity | silent data bugs | schema + drift reports | detected corruptions |
+| robustness | model instability | debug reports | captured failures |
+
 ## System hardening
 Run the cross-scenario validation suite:
 ```bash
@@ -116,6 +129,9 @@ See `benchmarks/` for the baseline suite and real pipelines.
 - `docs/hypotheses.md`
 - `docs/research_problem.md`
 - `docs/packaging.md`
+
+## How it works (diagram)
+![TrainKeeper architecture for training-time guardrails](docs/assets/architecture-diagram.png)
 
 ## Release checklist
 - `python -m build`
