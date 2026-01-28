@@ -8,6 +8,15 @@
 
 TrainKeeper is a minimal-decision, high-signal toolkit for building reproducible, debuggable, and efficient ML training systems. It adds guardrails **inside** training loops without replacing your existing stack.
 
+## Positioning
+TrainKeeper augments MLflow/W&B/DVC/Hydra/Lightning rather than replacing them. It focuses on the training-time failure surface: determinism, data issues, and instability.
+
+## Design principles
+- Zero-surprise defaults (deterministic seeds + environment capture)
+- Composable modules (opt-in, independent)
+- Minimal API surface (wraps existing loops)
+- Observability-first (artifacts over dashboards)
+
 ## Who it's for
 - ML engineers iterating on model training
 - Researchers validating reproducibility and failures
@@ -37,6 +46,14 @@ if __name__ == "__main__":
 - `experiment.yaml`, `run.json`
 - `seeds.json`, `system.json`, `env.txt`, `run.sh`
 
+## Typical workflow
+```bash
+tk init
+tk run -- python train.py
+tk compare exp-aaa exp-bbb
+tk repro-summary scenario_runs/
+```
+
 ## Install
 ```bash
 pip install trainkeeper
@@ -65,6 +82,13 @@ These are **not** included in the PyPI package.
 - `scenarios/scenario3_training_robustness/`
 - `system_tests/runner.py`
 
+## System hardening
+Run the cross-scenario validation suite:
+```bash
+tk system-check
+```
+Outputs: `scenario_results/system_summary.md` and `scenario_results/unified_failure_matrix.json`.
+
 ## CLI
 ```bash
 tk init
@@ -92,6 +116,11 @@ See `benchmarks/` for the baseline suite and real pipelines.
 - `docs/hypotheses.md`
 - `docs/research_problem.md`
 - `docs/packaging.md`
+
+## Release checklist
+- `python -m build`
+- `twine check dist/*`
+- `tk system-check`
 
 ## Architecture diagram
 See `docs/architecture.md` for the system overview and component boundaries.
