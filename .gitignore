@@ -12,6 +12,8 @@ scenario2_results/
 scenario3_results/
 scenario_results/
 data/
+!scenarios/scenario2_data_integrity/data/
+!scenarios/scenario2_data_integrity/data/**/.gitkeep
 trainkeeper/trainkeeper.egg-info/
 benchmarks/real/plots/
 benchmarks/real/results/
