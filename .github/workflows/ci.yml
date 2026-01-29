@@ -1,26 +1,37 @@
- name: CI
- 
- on:
-   push:
-   pull_request:
- 
- jobs:
-   tests:
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v4
-       - uses: actions/setup-python@v5
-         with:
-           python-version: "3.10"
-       - run: pip install -e .[dev,torch]
-       - run: pytest
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install package (dev + torch)
+        run: pip install -e .[dev,torch]
+
+      - name: Run tests
+        run: pytest
+
 
   system-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install -e .[dev,torch,tabular]
-      - run: tk system-check
+
+      - name: Install package (system extras)
+        run: pip install -e .[dev,torch,tabular]
+
+      - name: TrainKeeper system check
+        run: tk system-check
