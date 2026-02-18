@@ -171,6 +171,7 @@ class RunContext:
     run_dir: Path
     exp_id: str
     config: Optional[Dict[str, Any]] = None
+    _drift_detector: Optional[Any] = None
 
     @property
     def run_json(self):
@@ -184,6 +185,56 @@ class RunContext:
         payload = _to_serializable(payload)
         _write_yaml(self.experiment_yaml, payload)
         _atomic_write_text(self.run_json, json.dumps(payload, indent=2))
+
+    def check_drift(self, current_data: Any, feature_name: str, reference_data: Any = None, threshold: float = 0.1):
+        """
+        Check for data drift against a reference dataset.
+        
+        Args:
+            current_data: The new data to check (numpy array or list)
+            feature_name: Name of the feature/column
+            reference_data: Reference/baseline data. If None, must have been set previously.
+            threshold: Drift score threshold (default 0.1)
+        """
+        if self._drift_detector is None:
+            # Lazy init default detector if none configured
+            try:
+                from trainkeeper.drift import DriftDetector
+                self._drift_detector = DriftDetector()
+            except ImportError:
+                print("⚠️  Drift detection module not found.")
+                return None
+
+        if reference_data is not None:
+             self._drift_detector.set_reference(reference_data)
+
+        try:
+            report = self._drift_detector.check_drift(
+                current_data, 
+                feature_name=feature_name, 
+                threshold=threshold
+            )
+            
+            # Log drift report
+            report_file = self.run_dir / f"drift_report_{feature_name}.json"
+            _atomic_write_text(
+                report_file, 
+                json.dumps({
+                    "feature": feature_name,
+                    "drifted": report.is_drifted,
+                    "score": report.drift_score,
+                    "metric": report.metric,
+                    "timestamp": _dt.datetime.utcnow().isoformat()
+                }, indent=2)
+            )
+            
+            if report.is_drifted:
+                print(f"🚨 Drift detected in {feature_name}! Score: {report.drift_score:.4f} > {threshold}")
+            
+            return report
+        except Exception as e:
+            print(f"⚠️  Drift check failed for {feature_name}: {e}")
+            return None
 
 
 def lock_seeds(seed=1337):
@@ -265,6 +316,8 @@ def run_reproducible(
     mlflow_experiment=None,
     write_env_script=True,
     config=None,
+    storage_uri=None,
+    drift_config=None,
 ):
     def decorator(fn):
         @functools.wraps(fn)
@@ -272,7 +325,49 @@ def run_reproducible(
             exp_id = uuid.uuid4().hex[:8]
             base = Path(artifacts_dir) / f"exp-{exp_id}"
             base.mkdir(parents=True, exist_ok=True)
-            ctx = RunContext(run_dir=base, exp_id=exp_id, config=config or {})
+            
+            # Initialize drift detector if config provided
+            drift_detector = None
+            if drift_config:
+                try:
+                    from trainkeeper.drift import DriftDetector, EmailAlert, WebhookAlert
+                    alerts = []
+                    for alert_cfg in drift_config.get("alerts", []):
+                        if alert_cfg["type"] == "email":
+                            alerts.append(EmailAlert(
+                                smtp_server=alert_cfg["smtp_server"],
+                                smtp_port=alert_cfg.get("smtp_port", 587),
+                                from_addr=alert_cfg["from_addr"],
+                                to_addrs=alert_cfg["to_addrs"],
+                                username=alert_cfg.get("username"),
+                                password=alert_cfg.get("password")
+                            ))
+                        elif alert_cfg["type"] == "webhook":
+                            alerts.append(WebhookAlert(url=alert_cfg["url"]))
+                    
+                    drift_detector = DriftDetector(alerts=alerts)
+                except ImportError:
+                    print("⚠️  Drift module not found. Drift detection disabled.")
+                except Exception as e:
+                    print(f"⚠️  Failed to init drift detector: {e}")
+
+            ctx = RunContext(
+                run_dir=base, 
+                exp_id=exp_id, 
+                config=config or {},
+                _drift_detector=drift_detector
+            )
+
+            # Initialize storage backend if URI provided
+            storage_backend = None
+            if storage_uri:
+                try:
+                    from trainkeeper.storage import get_storage_backend
+                    storage_backend = get_storage_backend(storage_uri)
+                except ImportError:
+                    print("⚠️  Storage module not found. Cloud sync disabled.")
+                except Exception as e:
+                    print(f"⚠️  Failed to initialize storage backend: {e}")
 
             lock_seeds(seed=seed)
 
@@ -330,6 +425,19 @@ def run_reproducible(
                     base / "metrics.json",
                     json.dumps(_to_serializable(result), indent=2),
                 )
+
+            # Sync artifacts to cloud storage if configured
+            if storage_backend:
+                try:
+                    print(f"☁️  Syncing artifacts to {storage_uri}...")
+                    # Upload the entire experiment directory
+                    # Structure: {storage_uri}/experiments/{exp_id}/
+                    remote_path = f"experiments/{ctx.exp_id}"
+                    storage_backend.upload(ctx.run_dir, remote_path)
+                    print(f"✅  Synced to: {storage_uri}/{remote_path}")
+                except Exception as e:
+                    print(f"❌  Cloud sync failed: {e}")
+
             return result
 
         return wrapper

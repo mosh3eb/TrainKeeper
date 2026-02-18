@@ -115,6 +115,27 @@ def _system_check():
     return subprocess.call([sys.executable, str(runner)])
 
 
+def _dashboard(port=8501, artifacts_dir="artifacts"):
+    """Launch the TrainKeeper interactive dashboard"""
+    try:
+        import streamlit.web.cli as stcli
+    except ImportError:
+        raise SystemExit(
+            "Dashboard requires streamlit. Install with: pip install trainkeeper[dashboard]"
+        )
+    
+    dashboard_app = Path(__file__).resolve().parent / "dashboard" / "app.py"
+    if not dashboard_app.exists():
+        raise SystemExit(f"Dashboard app not found at {dashboard_app}")
+    
+    # Set environment variable for artifacts directory
+    import os
+    os.environ["TRAINKEEPER_ARTIFACTS_DIR"] = artifacts_dir
+    
+    sys.argv = ["streamlit", "run", str(dashboard_app), "--server.port", str(port)]
+    sys.exit(stcli.main())
+
+
 def main():
     parser = argparse.ArgumentParser(prog="tk")
     sub = parser.add_subparsers(dest="subcommand")
@@ -144,6 +165,10 @@ def main():
     p_summary.add_argument("runs_dir")
 
     p_system = sub.add_parser("system-check", help="run scenario system checks")
+
+    p_dashboard = sub.add_parser("dashboard", help="launch interactive dashboard")
+    p_dashboard.add_argument("--port", type=int, default=8501, help="port for dashboard (default: 8501)")
+    p_dashboard.add_argument("--artifacts-dir", default="artifacts", help="artifacts directory path")
 
     args = parser.parse_args()
 
@@ -183,6 +208,9 @@ def main():
 
     if args.subcommand == "system-check":
         return _system_check()
+
+    if args.subcommand == "dashboard":
+        return _dashboard(port=args.port, artifacts_dir=args.artifacts_dir)
 
     parser.print_help()
     return 0
